@@ -1,103 +1,779 @@
-import Image from "next/image";
+"use client";
+
+import {
+  motion,
+  useScroll,
+  AnimatePresence,
+  useSpring,
+} from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import {
+  ArrowRight,
+  Globe,
+  Sparkles,
+  Zap,
+  Target,
+  Users,
+  ChevronDown,
+  ChevronUp,
+  Star,
+  Play,
+  Pause,
+  MousePointer2,
+  ArrowUpRight,
+} from "lucide-react";
+import Footer from "@/components/layouts/footer";
+import { useRef, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { LoadingScreen } from "@/components/ui/loading";
+import LandingNavbar from "@/components/layouts/landing-navbar";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end start"],
+  });
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const [activeSection, setActiveSection] = useState("hero");
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
+
+
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  // Auto-advance testimonials
+  useEffect(() => {
+    if (isPlaying) {
+      const timer = setInterval(() => {
+        setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+      }, 5000);
+      return () => clearInterval(timer);
+    }
+  }, [isPlaying]);
+
+  // Scroll to section
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const offset = 80; // Height of the navbar
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  // Update active section based on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = [
+        "hero",
+        "languages",
+        "features",
+        "testimonials",
+        "stats",
+        "cta",
+      ];
+      const scrollPosition = window.scrollY + window.innerHeight / 2;
+
+      for (const section of sections) {
+        const element = document.getElementById(section);
+        if (element) {
+          const { top, bottom } = element.getBoundingClientRect();
+          if (top <= scrollPosition && bottom >= scrollPosition) {
+            setActiveSection(section);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Add scroll progress tracking
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  });
+
+  // Add section progress tracking
+  const [sectionProgress, setSectionProgress] = useState({
+    languages: 0,
+    features: 0,
+    testimonials: 0,
+    stats: 0,
+    cta: 0,
+  });
+
+  // Update section progress on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = [
+        "languages",
+        "features",
+        "testimonials",
+        "stats",
+        "cta",
+      ];
+      sections.forEach((section) => {
+        const element = document.getElementById(section);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          const windowHeight = window.innerHeight;
+          const progress = Math.max(
+            0,
+            Math.min(
+              1,
+              (windowHeight - rect.top) / (windowHeight + rect.height)
+            )
+          );
+          setSectionProgress((prev) => ({ ...prev, [section]: progress }));
+        }
+      });
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      setIsRedirecting(true);
+      router.push("/dashboard");
+    }
+  }, [user, router]);
+
+  if (loading || isRedirecting) {
+    return <LoadingScreen />;
+  }
+
+  const languages = [
+    { name: "Spanish", flag: "🇪🇸", users: "230M+" },
+    { name: "French", flag: "🇫🇷", users: "175M+" },
+    { name: "German", flag: "🇩🇪", users: "120M+" },
+    { name: "Japanese", flag: "🇯🇵", users: "110M+" },
+    { name: "Mandarin", flag: "🇨🇳", users: "280M+" },
+    { name: "Italian", flag: "🇮🇹", users: "90M+" },
+  ];
+
+  const features = [
+    {
+      title: "Interactive Lessons",
+      description:
+        "Engaging lessons designed by language experts to keep you motivated.",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-6 w-6 text-primary"
+        >
+          <path d="M12 14l9-5-9-5-9 5 9 5z" />
+          <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+          <path d="M12 14l-6.16-3.422a12.083 12.083 0 00-.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 016.824-2.998 12.078 12.078 0 00-.665-6.479L12 14z" />
+        </svg>
+      ),
+    },
+    {
+      title: "Personalized Learning",
+      description: "AI-powered system adapts to your learning style and pace.",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-6 w-6 text-primary"
+        >
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      ),
+    },
+    {
+      title: "Real Conversations",
+      description: "Practice with AI tutors that sound like native speakers.",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-6 w-6 text-primary"
+        >
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+      ),
+    },
+    {
+      title: "Progress Tracking",
+      description:
+        "Track your learning journey with detailed analytics and insights.",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-6 w-6 text-primary"
+        >
+          <path d="M12 20V10" />
+          <path d="M18 20V4" />
+          <path d="M6 20v-6" />
+        </svg>
+      ),
+    },
+  ];
+
+  const testimonials = [
+    {
+      name: "Sarah Johnson",
+      role: "Student",
+      content:
+        "LinguaLeap made learning Spanish fun and engaging. I went from beginner to conversational in just 3 months!",
+      avatar: "/testimonial-1.jpg",
+    },
+    {
+      name: "Michael Chen",
+      role: "Business Professional",
+      content:
+        "The personalized approach helped me learn Japanese for business much faster than traditional methods.",
+      avatar: "/testimonial-2.jpg",
+    },
+    {
+      name: "Emma Rodriguez",
+      role: "Traveler",
+      content:
+        "I used LinguaLeap to learn Italian before my trip to Rome. The practical vocabulary was incredibly useful!",
+      avatar: "/testimonial-3.jpg",
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-black text-white">
+      <LandingNavbar />
+      {/* Scroll Progress Bar */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500 origin-left z-50"
+        style={{ scaleX }}
+      />
+
+      {/* Section Progress Indicators */}
+      <div className="fixed left-4 top-1/2 -translate-y-1/2 hidden lg:block space-y-4">
+        {Object.entries(sectionProgress).map(([section, progress]) => (
+          <motion.div
+            key={section}
+            className="relative"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+            <div className="w-1 h-16 bg-gray-800 rounded-full overflow-hidden">
+              <motion.div
+                className="w-full bg-gradient-to-b from-purple-500 to-pink-500"
+                style={{ scaleY: progress }}
+                initial={{ scaleY: 0 }}
+                animate={{ scaleY: progress }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
+            <motion.div
+              className="absolute -left-8 top-1/2 -translate-y-1/2 text-xs text-gray-400"
+              animate={{ opacity: progress > 0 ? 1 : 0.5 }}
+            >
+              {section.charAt(0).toUpperCase() + section.slice(1)}
+            </motion.div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Animated Background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-black to-black" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f46e5,#ec4899)] opacity-20 mix-blend-multiply filter blur-xl animate-blob" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f46e5,#ec4899)] opacity-20 mix-blend-multiply filter blur-xl animate-blob animation-delay-2000" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f46e5,#ec4899)] opacity-20 mix-blend-multiply filter blur-xl animate-blob animation-delay-4000" />
+      </div>
+
+      {/* Floating Navigation */}
+      <div className="fixed right-8 top-1/2 -translate-y-1/2 z-50 hidden lg:block">
+        <div className="flex flex-col space-y-4">
+          {[
+            "hero",
+            "languages",
+            "features",
+            "testimonials",
+            "stats",
+            "cta",
+          ].map((section) => (
+            <motion.button
+              key={section}
+              onClick={() => scrollToSection(section)}
+              className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                activeSection === section
+                  ? "bg-purple-500 scale-125"
+                  : "bg-gray-600 hover:bg-gray-400"
+              }`}
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ scale: 0.9 }}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          ))}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      </div>
+
+      {/* Enhanced Scroll Indicator */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1 }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center"
+      >
+        <motion.div
+          animate={{
+            y: [0, 10, 0],
+          }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <MousePointer2 className="w-6 h-6 text-purple-400" />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="text-sm text-gray-400 mt-2"
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          Scroll to explore
+        </motion.div>
+      </motion.div>
+
+      {/* Enhanced Hero Section */}
+      <section
+        id="home"
+        className="relative min-h-screen flex items-center justify-center px-4 pt-16"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center relative z-10"
         >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="mb-6"
+          >
+            <div className="inline-block px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-sm font-medium">
+              AI-Powered Language Learning
+            </div>
+          </motion.div>
+
+          <h1 className="text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 animate-gradient">
+            Master Any Language
+            <br />
+            <span className="text-6xl">With AI Magic</span>
+          </h1>
+
+          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+            Experience the future of language learning with our cutting-edge AI
+            platform. Personalized lessons, real-time feedback, and immersive
+            practice await you.
+          </p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+          >
+            <Button
+              size="lg"
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-lg px-8 py-6 rounded-full shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-300"
+            >
+              Start Learning Now <ArrowRight className="ml-2" />
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10 text-lg px-8 py-6 rounded-full transition-all duration-300"
+            >
+              Watch Demo
+            </Button>
+          </motion.div>
+        </motion.div>
+
+        {/* Add floating elements with enhanced animations */}
+        <motion.div
+          animate={{
+            y: [0, -20, 0],
+            rotate: [0, 5, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="absolute top-20 left-10 w-20 h-20 bg-purple-500/20 rounded-full blur-2xl"
+        />
+        <motion.div
+          animate={{
+            y: [0, 20, 0],
+            rotate: [0, -5, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 5,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1,
+          }}
+          className="absolute bottom-20 right-10 w-32 h-32 bg-pink-500/20 rounded-full blur-2xl"
+        />
+      </section>
+
+      {/* Enhanced Languages Section */}
+      <section id="languages" className="py-20 px-4 relative">
+        <div className="container mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+              Languages You Can Learn
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Choose from over 25 languages with detailed courses crafted by
+              linguistic experts.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            {languages.map((language, index) => (
+              <motion.div
+                key={language.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.05 }}
+                className="group relative"
+              >
+                <Card className="p-6 bg-gray-900/50 backdrop-blur-lg border-gray-800 hover:border-purple-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20">
+                  <div className="text-4xl mb-3 transform group-hover:scale-110 transition-transform duration-300">
+                    {language.flag}
+                  </div>
+                  <h3 className="text-lg font-medium text-white mb-2">
+                    {language.name}
+                  </h3>
+                  <p className="text-sm text-gray-400">
+                    {language.users} learners
+                  </p>
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 to-pink-500/0 group-hover:from-purple-500/10 group-hover:to-pink-500/10 transition-all duration-300 rounded-xl" />
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mt-12"
+          >
+            <Button
+              variant="outline"
+              className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
+            >
+              View All Languages
+            </Button>
+          </motion.div>
+
+          {/* Add progress indicator */}
+          <motion.div
+            className="absolute top-0 left-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500"
+            style={{ width: `${sectionProgress.languages * 100}%` }}
+            initial={{ width: 0 }}
+            animate={{ width: `${sectionProgress.languages * 100}%` }}
+            transition={{ duration: 0.3 }}
           />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        </div>
+      </section>
+
+      {/* Enhanced Features Section */}
+      <section id="features" className="py-20 px-4 relative">
+        <div className="container mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+              Why Choose Our Platform?
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Experience the most advanced language learning platform powered by
+              cutting-edge AI technology.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.2 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.05, rotateY: 5 }}
+                className="group perspective"
+              >
+                <Card className="p-6 bg-gray-900/50 backdrop-blur-lg border-gray-800 hover:border-purple-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 transform-gpu">
+                  <div className="mb-4 transform group-hover:scale-110 transition-transform duration-300">
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-400">{feature.description}</p>
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-purple-500/0 to-pink-500/0 group-hover:from-purple-500/10 group-hover:to-pink-500/10 transition-all duration-300 rounded-xl"
+                    whileHover={{ scale: 1.02 }}
+                  />
+                  <motion.div
+                    className="absolute bottom-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    whileHover={{ x: 5 }}
+                  >
+                    <ArrowUpRight className="w-5 h-5 text-purple-400" />
+                  </motion.div>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Enhanced Testimonials Section */}
+      <section id="testimonials" className="py-20 px-4 relative">
+        <div className="container mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+              What Our Learners Say
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Join thousands of satisfied learners who have achieved their
+              language goals.
+            </p>
+          </motion.div>
+
+          <div className="relative max-w-4xl mx-auto">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentTestimonial}
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ duration: 0.5 }}
+                className="bg-gray-900/50 backdrop-blur-lg rounded-xl p-8 border border-gray-800"
+              >
+                <div className="flex items-center mb-6">
+                  <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center text-2xl">
+                    {testimonials[currentTestimonial].name[0]}
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-xl font-semibold">
+                      {testimonials[currentTestimonial].name}
+                    </h3>
+                    <p className="text-gray-400">
+                      {testimonials[currentTestimonial].role}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-gray-300 italic mb-6">
+                  {testimonials[currentTestimonial].content}
+                </p>
+                <div className="flex items-center">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className="w-5 h-5 text-yellow-400 fill-current"
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            <div className="flex justify-center mt-8 space-x-4">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setIsPlaying(!isPlaying)}
+                className="p-2 rounded-full bg-purple-500/20 hover:bg-purple-500/30 transition-colors"
+              >
+                {isPlaying ? (
+                  <Pause className="w-5 h-5" />
+                ) : (
+                  <Play className="w-5 h-5" />
+                )}
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() =>
+                  setCurrentTestimonial(
+                    (prev) =>
+                      (prev - 1 + testimonials.length) % testimonials.length
+                  )
+                }
+                className="p-2 rounded-full bg-purple-500/20 hover:bg-purple-500/30 transition-colors"
+              >
+                <ChevronUp className="w-5 h-5" />
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() =>
+                  setCurrentTestimonial(
+                    (prev) => (prev + 1) % testimonials.length
+                  )
+                }
+                className="p-2 rounded-full bg-purple-500/20 hover:bg-purple-500/30 transition-colors"
+              >
+                <ChevronDown className="w-5 h-5" />
+              </motion.button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Enhanced Stats Section */}
+      <section id="stats" className="py-20 px-4 relative">
+        <div className="container mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                number: "1M+",
+                label: "Active Users",
+                icon: <Users className="w-8 h-8" />,
+                gradient: "from-blue-500 to-purple-500",
+              },
+              {
+                number: "50+",
+                label: "Languages",
+                icon: <Globe className="w-8 h-8" />,
+                gradient: "from-purple-500 to-pink-500",
+              },
+              {
+                number: "95%",
+                label: "Success Rate",
+                icon: <Target className="w-8 h-8" />,
+                gradient: "from-pink-500 to-red-500",
+              },
+            ].map((stat, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: index * 0.2 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.05 }}
+                className="text-center group"
+              >
+                <motion.div
+                  className="inline-block p-4 rounded-full bg-purple-500/10 mb-4 group-hover:bg-purple-500/20 transition-colors"
+                  whileHover={{ rotate: 360 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {stat.icon}
+                </motion.div>
+                <h3
+                  className={`text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r ${stat.gradient}`}
+                >
+                  {stat.number}
+                </h3>
+                <p className="text-gray-400">{stat.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Enhanced CTA Section */}
+      <section id="cta" className="py-20 px-4 relative">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+          className="container mx-auto text-center"
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+          >
+            <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+            <h2 className="text-4xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+              Ready to Start Your Language Journey?
+            </h2>
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+              Join thousands of learners who are already mastering new languages
+              with our AI platform.
+            </p>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-lg px-8 py-6 rounded-full shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-300"
+              >
+                Create Free Account <Zap className="ml-2" />
+              </Button>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      <Footer />
     </div>
   );
 }
