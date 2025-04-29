@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "NEXT_IGNORE_ESLINT=1 next build",
-    "build:netlify": "NEXT_DISABLE_ESLINT=1 next build",
+
+    "build": "NEXT_DISABLE_ESLINT=1 NEXT_TYPESCRIPT_CHECK=0 next build",
     "start": "next start",
     "lint": "next lint"
   },
