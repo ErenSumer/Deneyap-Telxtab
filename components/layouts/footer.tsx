@@ -33,12 +33,6 @@ const Footer = () => {
       { name: "Community", href: "/community" },
       { name: "API", href: "/api" },
     ],
-    legal: [
-      { name: "Privacy", href: "/privacy" },
-      { name: "Terms", href: "/terms" },
-      { name: "Security", href: "/security" },
-      { name: "Cookies", href: "/cookies" },
-    ],
   };
 
   const socialLinks = [
@@ -50,7 +44,7 @@ const Footer = () => {
   ];
 
   const contactInfo = [
-    { icon: <Mail className="w-5 h-5" />, text: "support@lingualeap.com" },
+    { icon: <Mail className="w-5 h-5" />, text: "support@Telxtab.com" },
     { icon: <Phone className="w-5 h-5" />, text: "+1 (555) 123-4567" },
     { icon: <MapPin className="w-5 h-5" />, text: "San Francisco, CA" },
   ];
@@ -69,7 +63,7 @@ const Footer = () => {
           >
             <Link href="/" className="flex items-center space-x-2">
               <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-                LinguaLeap
+                Telxtab
               </span>
             </Link>
             <p className="text-gray-400 text-sm">
@@ -156,7 +150,7 @@ const Footer = () => {
           viewport={{ once: true }}
           className="mt-8 pt-8 border-t border-white/10 text-center text-gray-400 text-sm"
         >
-          <p>© {new Date().getFullYear()} LinguaLeap. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Telxtab. All rights reserved.</p>
         </motion.div>
       </div>
     </footer>

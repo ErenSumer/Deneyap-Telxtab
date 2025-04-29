@@ -1,42 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
-import {
-  BookOpen,
-  Brain,
-  Trophy,
-  Clock,
-  Target,
-  BarChart3,
-  Settings,
-  LogOut,
-  Home,
-  Users,
-  MessageSquare,
-  Bell,
-} from "lucide-react";
+import { Settings, LogOut, Home, BookOpen, Bell, Award } from "lucide-react";
+import { useProfile } from "@/context/ProfileContext";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const Sidebar = () => {
   const pathname = usePathname();
   const { user, signOut } = useAuth();
-
-  const navigation = [
-    { name: "Dashboard", href: "/dashboard", icon: Home },
-    { name: "My Courses", href: "/dashboard/courses", icon: BookOpen },
-    { name: "Vocabulary", href: "/dashboard/vocabulary", icon: Brain },
-    { name: "Progress", href: "/dashboard/progress", icon: BarChart3 },
-    { name: "Achievements", href: "/dashboard/achievements", icon: Trophy },
-    { name: "Study Time", href: "/dashboard/study-time", icon: Clock },
-    { name: "Goals", href: "/dashboard/goals", icon: Target },
-    { name: "Community", href: "/dashboard/community", icon: Users },
-    { name: "Messages", href: "/dashboard/messages", icon: MessageSquare },
-    { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
-    { name: "Settings", href: "/dashboard/settings", icon: Settings },
-  ];
+  const { profile } = useProfile();
 
   const handleSignOut = async () => {
     try {
@@ -45,6 +19,14 @@ const Sidebar = () => {
       console.error("Error signing out:", error);
     }
   };
+
+  const navigation = [
+    { name: "Dashboard", href: "/dashboard", icon: Home },
+    { name: "Lessons", href: "/dashboard/lessons", icon: BookOpen },
+    { name: "Notifications", href: "/dashboard/notifications", icon: Bell },
+    { name: "Certificates", href: "/dashboard/certificates", icon: Award },
+    { name: "Settings", href: "/dashboard/settings", icon: Settings },
+  ];
 
   return (
     <div className="w-[280px] h-screen bg-gray-900/50 backdrop-blur-lg border-r border-gray-800 fixed left-0 top-0 z-50">
@@ -56,7 +38,7 @@ const Sidebar = () => {
               <span className="text-white font-bold">L</span>
             </div>
             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-              LinguaLeap
+              Telxtab
             </span>
           </div>
         </div>
@@ -87,14 +69,20 @@ const Sidebar = () => {
         {/* User Profile and Logout */}
         <div className="p-4 border-t border-gray-800">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-              <span className="text-white font-medium">
-                {user?.email?.[0].toUpperCase()}
-              </span>
-            </div>
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={profile?.avatar_url || undefined} />
+              <AvatarFallback>
+                {profile?.full_name
+                  ? profile.full_name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                  : user?.email?.[0].toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">
-                {user?.email}
+                {profile?.full_name || profile?.username || user?.email}
               </p>
             </div>
           </div>

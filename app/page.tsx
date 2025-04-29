@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  motion,
-  useScroll,
-  AnimatePresence,
-  useSpring,
-} from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -24,24 +19,27 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import Footer from "@/components/layouts/footer";
-import { useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { LoadingScreen } from "@/components/ui/loading";
 import LandingNavbar from "@/components/layouts/landing-navbar";
 
 export default function Home() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end start"],
-  });
-
+  // State for the page
   const [activeSection, setActiveSection] = useState("hero");
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [sectionProgress, setSectionProgress] = useState({
+    languages: 0,
+    features: 0,
+    testimonials: 0,
+    stats: 0,
+    cta: 0,
+  });
 
-
+  // Authentication and navigation
   const { user, loading } = useAuth();
   const router = useRouter();
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -71,9 +69,17 @@ export default function Home() {
     }
   };
 
-  // Update active section based on scroll
+  // Track scroll progress
   useEffect(() => {
     const handleScroll = () => {
+      // Calculate overall scroll progress
+      const scrollTop = window.scrollY;
+      const docHeight = document.body.offsetHeight;
+      const winHeight = window.innerHeight;
+      const scrollPercent = scrollTop / (docHeight - winHeight);
+      setScrollProgress(scrollPercent);
+
+      // Update active section based on scroll
       const sections = [
         "hero",
         "languages",
@@ -94,39 +100,18 @@ export default function Home() {
           }
         }
       }
-    };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // Add scroll progress tracking
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001,
-  });
-
-  // Add section progress tracking
-  const [sectionProgress, setSectionProgress] = useState({
-    languages: 0,
-    features: 0,
-    testimonials: 0,
-    stats: 0,
-    cta: 0,
-  });
-
-  // Update section progress on scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      const sections = [
+      // Update section progress on scroll
+      const sectionsList = [
         "languages",
         "features",
         "testimonials",
         "stats",
         "cta",
       ];
-      sections.forEach((section) => {
+      const newSectionProgress = { ...sectionProgress };
+
+      sectionsList.forEach((section) => {
         const element = document.getElementById(section);
         if (element) {
           const rect = element.getBoundingClientRect();
@@ -138,14 +123,19 @@ export default function Home() {
               (windowHeight - rect.top) / (windowHeight + rect.height)
             )
           );
-          setSectionProgress((prev) => ({ ...prev, [section]: progress }));
+          if (section in sectionProgress) {
+            newSectionProgress[section as keyof typeof sectionProgress] =
+              progress;
+          }
         }
       });
+
+      setSectionProgress(newSectionProgress);
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [sectionProgress]);
 
   useEffect(() => {
     if (user) {
@@ -158,6 +148,7 @@ export default function Home() {
     return <LoadingScreen />;
   }
 
+  // Content for the page
   const languages = [
     { name: "Spanish", flag: "🇪🇸", users: "230M+" },
     { name: "French", flag: "🇫🇷", users: "175M+" },
@@ -172,80 +163,23 @@ export default function Home() {
       title: "Interactive Lessons",
       description:
         "Engaging lessons designed by language experts to keep you motivated.",
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="h-6 w-6 text-primary"
-        >
-          <path d="M12 14l9-5-9-5-9 5 9 5z" />
-          <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-          <path d="M12 14l-6.16-3.422a12.083 12.083 0 00-.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 016.824-2.998 12.078 12.078 0 00-.665-6.479L12 14z" />
-        </svg>
-      ),
+      icon: <Zap className="h-6 w-6 text-primary" />,
     },
     {
       title: "Personalized Learning",
       description: "AI-powered system adapts to your learning style and pace.",
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="h-6 w-6 text-primary"
-        >
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
-      ),
+      icon: <Users className="h-6 w-6 text-primary" />,
     },
     {
       title: "Real Conversations",
       description: "Practice with AI tutors that sound like native speakers.",
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="h-6 w-6 text-primary"
-        >
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        </svg>
-      ),
+      icon: <Globe className="h-6 w-6 text-primary" />,
     },
     {
       title: "Progress Tracking",
       description:
         "Track your learning journey with detailed analytics and insights.",
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="h-6 w-6 text-primary"
-        >
-          <path d="M12 20V10" />
-          <path d="M18 20V4" />
-          <path d="M6 20v-6" />
-        </svg>
-      ),
+      icon: <Target className="h-6 w-6 text-primary" />,
     },
   ];
 
@@ -254,7 +188,7 @@ export default function Home() {
       name: "Sarah Johnson",
       role: "Student",
       content:
-        "LinguaLeap made learning Spanish fun and engaging. I went from beginner to conversational in just 3 months!",
+        "Telxtab made learning Spanish fun and engaging. I went from beginner to conversational in just 3 months!",
       avatar: "/testimonial-1.jpg",
     },
     {
@@ -268,7 +202,7 @@ export default function Home() {
       name: "Emma Rodriguez",
       role: "Traveler",
       content:
-        "I used LinguaLeap to learn Italian before my trip to Rome. The practical vocabulary was incredibly useful!",
+        "I used Telxtab to learn Italian before my trip to Rome. The practical vocabulary was incredibly useful!",
       avatar: "/testimonial-3.jpg",
     },
   ];
@@ -276,47 +210,34 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-black text-white">
       <LandingNavbar />
-      {/* Scroll Progress Bar */}
+
+      {/* Scroll Progress Bar - Fixed implementation */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500 origin-left z-50"
-        style={{ scaleX }}
+        style={{ scaleX: scrollProgress }}
       />
 
       {/* Section Progress Indicators */}
       <div className="fixed left-4 top-1/2 -translate-y-1/2 hidden lg:block space-y-4">
         {Object.entries(sectionProgress).map(([section, progress]) => (
-          <motion.div
-            key={section}
-            className="relative"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
+          <div key={section} className="relative">
             <div className="w-1 h-16 bg-gray-800 rounded-full overflow-hidden">
               <motion.div
-                className="w-full bg-gradient-to-b from-purple-500 to-pink-500"
+                className="w-full bg-gradient-to-b from-purple-500 to-pink-500 origin-bottom"
                 style={{ scaleY: progress }}
-                initial={{ scaleY: 0 }}
-                animate={{ scaleY: progress }}
-                transition={{ duration: 0.3 }}
               />
             </div>
-            <motion.div
-              className="absolute -left-8 top-1/2 -translate-y-1/2 text-xs text-gray-400"
-              animate={{ opacity: progress > 0 ? 1 : 0.5 }}
-            >
+            <div className="absolute -left-8 top-1/2 -translate-y-1/2 text-xs text-gray-400">
               {section.charAt(0).toUpperCase() + section.slice(1)}
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         ))}
       </div>
 
       {/* Animated Background */}
       <div className="fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-black to-black" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f46e5,#ec4899)] opacity-20 mix-blend-multiply filter blur-xl animate-blob" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f46e5,#ec4899)] opacity-20 mix-blend-multiply filter blur-xl animate-blob animation-delay-2000" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f46e5,#ec4899)] opacity-20 mix-blend-multiply filter blur-xl animate-blob animation-delay-4000" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f46e5,#ec4899)] opacity-20 mix-blend-multiply filter blur-xl" />
       </div>
 
       {/* Floating Navigation */}
@@ -330,7 +251,7 @@ export default function Home() {
             "stats",
             "cta",
           ].map((section) => (
-            <motion.button
+            <button
               key={section}
               onClick={() => scrollToSection(section)}
               className={`w-3 h-3 rounded-full transition-all duration-300 ${
@@ -338,14 +259,12 @@ export default function Home() {
                   ? "bg-purple-500 scale-125"
                   : "bg-gray-600 hover:bg-gray-400"
               }`}
-              whileHover={{ scale: 1.2 }}
-              whileTap={{ scale: 0.9 }}
             />
           ))}
         </div>
       </div>
 
-      {/* Enhanced Scroll Indicator */}
+      {/* Scroll Indicator */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -364,103 +283,56 @@ export default function Home() {
         >
           <MousePointer2 className="w-6 h-6 text-purple-400" />
         </motion.div>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="text-sm text-gray-400 mt-2"
-        >
-          Scroll to explore
-        </motion.div>
+        <div className="text-sm text-gray-400 mt-2">Scroll to explore</div>
       </motion.div>
 
-      {/* Enhanced Hero Section */}
+      {/* Hero Section */}
       <section
-        id="home"
+        id="hero"
         className="relative min-h-screen flex items-center justify-center px-4 pt-16"
       >
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center relative z-10"
-        >
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="mb-6"
-          >
-            <div className="inline-block px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-sm font-medium">
-              AI-Powered Language Learning
-            </div>
-          </motion.div>
-
-          <h1 className="text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 animate-gradient">
-            Master Any Language
-            <br />
-            <span className="text-6xl">With AI Magic</span>
-          </h1>
-
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Experience the future of language learning with our cutting-edge AI
-            platform. Personalized lessons, real-time feedback, and immersive
-            practice await you.
-          </p>
-
+        <div className="text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
+            transition={{ duration: 0.8 }}
           >
-            <Button
-              size="lg"
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-lg px-8 py-6 rounded-full shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-300"
-            >
-              Start Learning Now <ArrowRight className="ml-2" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10 text-lg px-8 py-6 rounded-full transition-all duration-300"
-            >
-              Watch Demo
-            </Button>
-          </motion.div>
-        </motion.div>
+            <div className="inline-block px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-sm font-medium mb-6">
+              AI-Powered Language Learning
+            </div>
 
-        {/* Add floating elements with enhanced animations */}
-        <motion.div
-          animate={{
-            y: [0, -20, 0],
-            rotate: [0, 5, 0],
-            scale: [1, 1.1, 1],
-          }}
-          transition={{
-            duration: 5,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-          className="absolute top-20 left-10 w-20 h-20 bg-purple-500/20 rounded-full blur-2xl"
-        />
-        <motion.div
-          animate={{
-            y: [0, 20, 0],
-            rotate: [0, -5, 0],
-            scale: [1, 1.1, 1],
-          }}
-          transition={{
-            duration: 5,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 1,
-          }}
-          className="absolute bottom-20 right-10 w-32 h-32 bg-pink-500/20 rounded-full blur-2xl"
-        />
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 animate-gradient">
+              Master Any Language
+              <br />
+              <span className="text-4xl md:text-6xl">With AI Magic</span>
+            </h1>
+
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+              Experience the future of language learning with our cutting-edge
+              AI platform. Personalized lessons, real-time feedback, and
+              immersive practice await you.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-lg px-8 py-6 rounded-full shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-300"
+              >
+                Start Learning Now <ArrowRight className="ml-2" />
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10 text-lg px-8 py-6 rounded-full transition-all duration-300"
+              >
+                Watch Demo
+              </Button>
+            </div>
+          </motion.div>
+        </div>
       </section>
 
-      {/* Enhanced Languages Section */}
+      {/* Languages Section */}
       <section id="languages" className="py-20 px-4 relative">
         <div className="container mx-auto">
           <motion.div
@@ -500,7 +372,6 @@ export default function Home() {
                   <p className="text-sm text-gray-400">
                     {language.users} learners
                   </p>
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 to-pink-500/0 group-hover:from-purple-500/10 group-hover:to-pink-500/10 transition-all duration-300 rounded-xl" />
                 </Card>
               </motion.div>
             ))}
@@ -520,19 +391,10 @@ export default function Home() {
               View All Languages
             </Button>
           </motion.div>
-
-          {/* Add progress indicator */}
-          <motion.div
-            className="absolute top-0 left-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500"
-            style={{ width: `${sectionProgress.languages * 100}%` }}
-            initial={{ width: 0 }}
-            animate={{ width: `${sectionProgress.languages * 100}%` }}
-            transition={{ duration: 0.3 }}
-          />
         </div>
       </section>
 
-      {/* Enhanced Features Section */}
+      {/* Features Section */}
       <section id="features" className="py-20 px-4 relative">
         <div className="container mx-auto">
           <motion.div
@@ -551,7 +413,7 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
@@ -559,10 +421,10 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.2 }}
                 viewport={{ once: true }}
-                whileHover={{ scale: 1.05, rotateY: 5 }}
-                className="group perspective"
+                whileHover={{ scale: 1.05 }}
+                className="group"
               >
-                <Card className="p-6 bg-gray-900/50 backdrop-blur-lg border-gray-800 hover:border-purple-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20 transform-gpu">
+                <Card className="p-6 bg-gray-900/50 backdrop-blur-lg border-gray-800 hover:border-purple-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/20">
                   <div className="mb-4 transform group-hover:scale-110 transition-transform duration-300">
                     {feature.icon}
                   </div>
@@ -570,16 +432,9 @@ export default function Home() {
                     {feature.title}
                   </h3>
                   <p className="text-gray-400">{feature.description}</p>
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-purple-500/0 to-pink-500/0 group-hover:from-purple-500/10 group-hover:to-pink-500/10 transition-all duration-300 rounded-xl"
-                    whileHover={{ scale: 1.02 }}
-                  />
-                  <motion.div
-                    className="absolute bottom-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                    whileHover={{ x: 5 }}
-                  >
+                  <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                     <ArrowUpRight className="w-5 h-5 text-purple-400" />
-                  </motion.div>
+                  </div>
                 </Card>
               </motion.div>
             ))}
@@ -587,7 +442,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Enhanced Testimonials Section */}
+      {/* Testimonials Section */}
       <section id="testimonials" className="py-20 px-4 relative">
         <div className="container mx-auto">
           <motion.div
@@ -630,7 +485,7 @@ export default function Home() {
                   </div>
                 </div>
                 <p className="text-gray-300 italic mb-6">
-                  {testimonials[currentTestimonial].content}
+                  &ldquo;{testimonials[currentTestimonial].content}&rdquo;
                 </p>
                 <div className="flex items-center">
                   {[...Array(5)].map((_, i) => (
@@ -644,9 +499,7 @@ export default function Home() {
             </AnimatePresence>
 
             <div className="flex justify-center mt-8 space-x-4">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+              <button
                 onClick={() => setIsPlaying(!isPlaying)}
                 className="p-2 rounded-full bg-purple-500/20 hover:bg-purple-500/30 transition-colors"
               >
@@ -655,10 +508,8 @@ export default function Home() {
                 ) : (
                   <Play className="w-5 h-5" />
                 )}
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+              </button>
+              <button
                 onClick={() =>
                   setCurrentTestimonial(
                     (prev) =>
@@ -668,10 +519,8 @@ export default function Home() {
                 className="p-2 rounded-full bg-purple-500/20 hover:bg-purple-500/30 transition-colors"
               >
                 <ChevronUp className="w-5 h-5" />
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+              </button>
+              <button
                 onClick={() =>
                   setCurrentTestimonial(
                     (prev) => (prev + 1) % testimonials.length
@@ -680,13 +529,13 @@ export default function Home() {
                 className="p-2 rounded-full bg-purple-500/20 hover:bg-purple-500/30 transition-colors"
               >
                 <ChevronDown className="w-5 h-5" />
-              </motion.button>
+              </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Enhanced Stats Section */}
+      {/* Stats Section */}
       <section id="stats" className="py-20 px-4 relative">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -719,13 +568,9 @@ export default function Home() {
                 whileHover={{ scale: 1.05 }}
                 className="text-center group"
               >
-                <motion.div
-                  className="inline-block p-4 rounded-full bg-purple-500/10 mb-4 group-hover:bg-purple-500/20 transition-colors"
-                  whileHover={{ rotate: 360 }}
-                  transition={{ duration: 0.5 }}
-                >
+                <div className="inline-block p-4 rounded-full bg-purple-500/10 mb-4 group-hover:bg-purple-500/20 transition-colors">
                   {stat.icon}
-                </motion.div>
+                </div>
                 <h3
                   className={`text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r ${stat.gradient}`}
                 >
@@ -738,7 +583,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Enhanced CTA Section */}
+      {/* CTA Section */}
       <section id="cta" className="py-20 px-4 relative">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -747,28 +592,21 @@ export default function Home() {
           viewport={{ once: true }}
           className="container mx-auto text-center"
         >
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-          >
-            <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-            <h2 className="text-4xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-              Ready to Start Your Language Journey?
-            </h2>
-            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Join thousands of learners who are already mastering new languages
-              with our AI platform.
-            </p>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-lg px-8 py-6 rounded-full shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-300"
-              >
-                Create Free Account <Zap className="ml-2" />
-              </Button>
-            </motion.div>
+          <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+          <h2 className="text-4xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
+            Ready to Start Your Language Journey?
+          </h2>
+          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            Join thousands of learners who are already mastering new languages
+            with our AI platform.
+          </p>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              size="lg"
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-lg px-8 py-6 rounded-full shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-300"
+            >
+              Create Free Account <Zap className="ml-2" />
+            </Button>
           </motion.div>
         </motion.div>
       </section>

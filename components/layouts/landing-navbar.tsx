@@ -111,7 +111,7 @@ const LandingNavbar = () => {
               href="/"
               className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500"
             >
-              LinguaLeap
+              Telxtab
             </Link>
           </motion.div>
 
