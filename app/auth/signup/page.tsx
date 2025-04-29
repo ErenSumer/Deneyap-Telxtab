@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,7 @@ export default function SignupPage() {
   const [agreed, setAgreed] = useState(false);
   const [oauthError, setOauthError] = useState<string | null>(null);
   const { signUp, signInWithGithub, signInWithGoogle } = useAuth();
-  const router = useRouter();
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

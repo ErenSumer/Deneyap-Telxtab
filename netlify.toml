@@ -1,0 +1,17 @@
+[build]
+  command = "npm run build:netlify"
+  publish = ".next"
+
+[build.environment]
+  NEXT_USE_NETLIFY_EDGE = "true"
+  NEXT_DISABLE_ESLINT = "1"
+  NODE_VERSION = "18"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Redirect all paths without file extensions to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200 

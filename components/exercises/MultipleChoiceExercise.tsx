@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, X } from "lucide-react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 interface MultipleChoiceExerciseProps {
   question: string;
@@ -24,7 +23,6 @@ export default function MultipleChoiceExercise({
   const [showExplanation, setShowExplanation] = useState(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const supabase = createClientComponentClient();
 
   const handleAnswerSelect = (answer: string) => {
     if (!isSubmitted) {
