@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
@@ -12,7 +12,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AtSign, Lock, LogIn, Loader2 } from "lucide-react";
 import { LoadingScreen } from "@/components/ui/loading";
 
-const LoginPage = () => {
+// Component to handle searchParams access
+function LoginContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -316,6 +317,13 @@ const LoginPage = () => {
       </motion.div>
     </div>
   );
-};
+}
 
-export default LoginPage;
+// Export a page component that uses Suspense boundary
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <LoginContent />
+    </Suspense>
+  );
+}
