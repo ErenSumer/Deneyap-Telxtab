@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useProfile } from "@/context/ProfileContext";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import { AlertTriangle } from "lucide-react";
 import Sidebar from "@/components/layouts/sidebar";
 import {
   Trophy,
@@ -235,20 +234,7 @@ const DashboardPage = () => {
 
   // If user is banned, show banned message
   if (profile.is_banned) {
-    return (
-      <div className="flex min-h-screen bg-[#0A0A0A] items-center justify-center">
-        <div className="text-center p-8 bg-gray-900/50 backdrop-blur-lg rounded-xl border border-red-500/50">
-          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-white mb-2">
-            Account Suspended
-          </h1>
-          <p className="text-gray-400">
-            Your account has been suspended. Please contact support for more
-            information.
-          </p>
-        </div>
-      </div>
-    );
+    router.push("/suspended");
   }
 
   const userStats = [
@@ -298,13 +284,13 @@ const DashboardPage = () => {
             <div className="mb-8">
               <div className="flex justify-between items-center">
                 <div>
-              <h1 className="text-3xl font-bold text-white mb-2">
-                Welcome back,{" "}
-                {profile.full_name || user.email?.split("@")[0] || "User"}!
-              </h1>
-              <p className="text-gray-400">
-                Continue your language learning journey
-              </p>
+                  <h1 className="text-3xl font-bold text-white mb-2">
+                    Welcome back,{" "}
+                    {profile.full_name || user.email?.split("@")[0] || "User"}!
+                  </h1>
+                  <p className="text-gray-400">
+                    Continue your language learning journey
+                  </p>
                 </div>
                 <button
                   onClick={() => router.push("/dashboard/notifications")}
@@ -366,52 +352,52 @@ const DashboardPage = () => {
                     <div className="w-10 h-10 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
                   </div>
                 ) : recentActivities.length > 0 ? (
-                <div className="space-y-4">
-                  {recentActivities.map((activity) => (
+                  <div className="space-y-4">
+                    {recentActivities.map((activity) => (
                       <Link
-                      key={activity.id}
+                        key={activity.id}
                         href={`/dashboard/lessons/videos/${activity.courseId}${activity.lessonId ? `/${activity.lessonId}` : ""}`}
-                    >
+                      >
                         <div className="flex items-center space-x-4 p-4 rounded-lg bg-gray-800/50 hover:bg-gray-800 transition-colors cursor-pointer">
-                      <div
+                          <div
                             className={`p-3 rounded-lg ${
-                          activity.status === "completed"
+                              activity.status === "completed"
                                 ? "bg-green-500/20"
                                 : "bg-yellow-500/20"
-                        }`}
-                      >
+                            }`}
+                          >
                             {activity.status === "completed" ? (
                               <Check className="w-5 h-5 text-green-400" />
                             ) : (
                               <PlayCircle className="w-5 h-5 text-yellow-400" />
                             )}
-                      </div>
+                          </div>
                           <div className="flex-1 min-w-0">
                             <h3 className="text-white font-medium truncate">
-                          {activity.title}
-                        </h3>
+                              {activity.title}
+                            </h3>
                             <p className="text-sm text-gray-400 truncate">
-                          {activity.description}
-                        </p>
-                      </div>
+                              {activity.description}
+                            </p>
+                          </div>
                           <div className="flex flex-col items-end">
                             <div className="flex items-center space-x-2 mb-1">
                               {activity.duration && (
-                        <span className="text-sm text-gray-400">
-                          {activity.duration}
-                        </span>
+                                <span className="text-sm text-gray-400">
+                                  {activity.duration}
+                                </span>
                               )}
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs ${
-                            activity.status === "completed"
-                              ? "bg-green-500/20 text-green-400"
-                                : "bg-yellow-500/20 text-yellow-400"
-                          }`}
-                        >
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs ${
+                                  activity.status === "completed"
+                                    ? "bg-green-500/20 text-green-400"
+                                    : "bg-yellow-500/20 text-yellow-400"
+                                }`}
+                              >
                                 {activity.status === "completed"
                                   ? "Completed"
                                   : "In Progress"}
-                        </span>
+                              </span>
                             </div>
                             <span className="text-xs text-gray-500">
                               {activity.time}
@@ -424,11 +410,11 @@ const DashboardPage = () => {
                                 />
                               </div>
                             )}
-                      </div>
-                    </div>
+                          </div>
+                        </div>
                       </Link>
-                  ))}
-                </div>
+                    ))}
+                  </div>
                 ) : (
                   <div className="text-center py-12 bg-gray-800/30 rounded-xl">
                     <Video className="w-12 h-12 mx-auto text-gray-600 mb-4" />
@@ -454,17 +440,17 @@ const DashboardPage = () => {
                 <div className="flex items-center justify-between p-4 border-b border-gray-800/50">
                   <h2 className="text-lg font-bold text-white">
                     XP Leaderboard
-                </h2>
+                  </h2>
                   <div className="flex items-center gap-2 px-2 py-1 bg-purple-500/20 rounded-lg">
                     <Crown className="w-3 h-3 text-purple-400" />
                     <span className="text-xs text-purple-400">Top 5</span>
-                        </div>
-                      </div>
+                  </div>
+                </div>
 
                 {isLeaderboardLoading ? (
                   <div className="flex justify-center py-6">
                     <div className="w-8 h-8 border-3 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
-                        </div>
+                  </div>
                 ) : (
                   <div className="p-3 space-y-2">
                     {leaderboardUsers.map((leaderUser, index) => {
@@ -531,9 +517,9 @@ const DashboardPage = () => {
                             <Trophy className="w-4 h-4 text-yellow-500" />
                             <span className="font-bold text-white text-sm">
                               {leaderUser.xp?.toLocaleString() || 0}
-                        </span>
-                      </div>
-                    </div>
+                            </span>
+                          </div>
+                        </div>
                       );
                     })}
 
@@ -542,7 +528,7 @@ const DashboardPage = () => {
                         No data yet. Complete lessons to earn XP!
                       </div>
                     )}
-                </div>
+                  </div>
                 )}
               </div>
             </div>
